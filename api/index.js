@@ -6,7 +6,7 @@ const app = express();
 const User = require('./models/User.js')
 const bcrypt = require('bcryptjs')
 
-const bcryptSalt = bcrypt.genSalt(12);
+const bcryptSalt = bcrypt.genSaltSync(12);
 
 app.use(express.json());
 
@@ -22,15 +22,20 @@ app.get('/test', (req, res) =>{
     res.json('test ok')
 });
 
-app.post('/register', async (req, res) =>{
-    const {name, email, password} = req.body;
-    await User.create({
+app.post('/api/register', async (req,res) => {
+    mongoose.connect(process.env.MONGO_URL);
+    const {name,email,password} = req.body;
+  
+    try {
+      const userDoc = await User.create({
         name,
         email,
         password:bcrypt.hashSync(password, bcryptSalt),
-    })
-
-    res.json(name, email, password);
-})
-
+      });
+      res.json(userDoc);
+    } catch (e) {
+      res.status(422).json(e);
+    }
+  
+  });
 app.listen(4000);
