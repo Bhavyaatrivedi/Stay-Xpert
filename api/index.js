@@ -7,6 +7,7 @@ const app = express();
 const User = require('./models/User.js')
 const bcrypt = require('bcryptjs');
 const cookieParser = require('cookie-parser')
+const imageDownloader = require('image-downloader')
 
 const bcryptSalt = bcrypt.genSaltSync(12);
 const jwtSecret = 'twqyucsbaeiqujwdna';
@@ -80,6 +81,27 @@ app.post('/api/register', async (req,res) => {
       res.json(null);
     }
   });
+
+
+  //Logout
+  app.post('/api/logout', (req,res) => {
+    res.cookie('token', '').json(true);
+  });
+  
+  
+  //Upload Pictures
+  app.post('/api/upload-by-link', async (req,res) => {
+    const {link} = req.body;
+    const newName = 'photo' + Date.now() + '.jpg';
+    await imageDownloader.image({
+      url: link,
+      dest: '/tmp/' +newName,
+    });
+    const url = await uploadToS3('/tmp/' +newName, newName, mime.lookup('/tmp/' +newName));
+    res.json(url);
+  });
+
+
 
 
 app.listen(4000);
